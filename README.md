@@ -3,8 +3,7 @@
 ## setup
 
 * download the repository
-
-* run: npm init
+* run: npm i
 
 ## how to run
 
