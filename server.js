@@ -2,7 +2,7 @@
 const express = require('express')
 const port = 5001
 
-var app = express() // inizialise express
+var app = express()
 app.use(express.json())
 
 app.get('/', (req, res) => {
