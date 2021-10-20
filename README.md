@@ -2,9 +2,10 @@
 
 ## setup
 
-*download the repository
-*rum npm init
+* download the repository
+
+* run: npm init
 
 ## how to run
 
-* npm run serve
+* run: npm run serve
