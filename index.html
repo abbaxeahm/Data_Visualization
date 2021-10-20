@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="json"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', { 'packages': ['line'] });
+        fetch(`https://simsva.se/api/aidb/get_devices`) // where you get the data (use simons api)
+            .then(response => response.json())
+            .then(data => getDevices(data));
+
+        function getDevices(data) {
+            for (i = 0; i < data.length; i++) {
+                document.getElementById("devicesList").innerHTML += "<li> id: " + data[i].id + "<br> mac: " + data[i].mac + "<br> name: " + data[i].name + "</li> "
+            }
+        }
+        let input = []
+        function updateInput() {
+            for (i = 0; i < document.querySelectorAll("input").length; i++) {
+                input[i] = document.querySelectorAll("input")[i].value
+                //input[i] = parseInt(input[i]) // 0-4 is modifier of values 5 is for the amount of data point, 6 is for sorting, 7 is for id
+            }
+        }
+        let startDate = new Date()
+        function onload() {
+            startDate.setUTCHours(startDate.getUTCHours() - (startDate.getTimezoneOffset()) / 60)
+            console.log(startDate, startDate.getTimezoneOffset())
+
+            startDate = startDate.toISOString()
+
+            console.log(startDate)
+            document.getElementById("date").value = startDate.substring(0, 10)
+            document.getElementById("time").value = startDate.substring(11, 19)
+        }
+        function graphing() {
+            updateInput()
+
+            console.log(input)
+
+            fetch(`https://simsva.se/api/aidb/sort_data?id=${input[7]}&count=${input[5]}&every=${input[6]}`) // where you get the data (use simons api)
+                .then(response => response.json())
+                .then(data => draw(data));
+        }
+
+        function draw(data) {
+            console.log(data)
+            delete data[0].id
+            var keys = Object.keys(data[0])
+            for (i = 0; i < data.length; i++) {
+                delete data[i].id // id is not usefull
+                data[i] = Object.values(data[i]) // convet dictionary to array
+                data[i][0] = new Date(data[i][0].substring(0, 19) + "+0000") // convert timestamp in to local time in js date down to seconds in prescision 
+                for (j = 1; j < 6; j++) {
+                    if (data[i][j] !== null) data[i][j] *= input[j - 1] // amplify all data points except null
+                }
+            }
+            console.log(data)
+            google.charts.setOnLoadCallback(drawChart(data, keys));
+        }
+        function drawChart(data, keys) {
+            var graph = new google.visualization.DataTable();
+            graph.addColumn('date', keys[0]);
+            for (i = 1; i < keys.length; i++) {
+                graph.addColumn('number', keys[i]);
+            }
+            graph.addRows(data);
+
+            var options = {
+                interpolateNulls: true,
+                explorer: {
+                    actions: ['dragToZoom', 'rightClickToReset'],
+                    axis: 'horizontal',
+                    keepInBounds: true,
+                    maxZoomIn: 4.0,
+                },
+                hAxis: {
+                    gridlines: {
+                        count: "-1",
+                        units: {
+                            minutes: {
+                                format: [
+                                    "HH:mm"
+                                ]
+                            },
+                            hours: {
+                                format: [
+                                    "HH"
+                                ]
+                            },
+                            days: {
+                                format: [
+                                    "yyyy/MM/dd"
+                                ]
+                            }
+                        }
+                    }
+                },
+                //hAxis: { format: "HH:mm" },
+                width: 900,
+                height: 500
+            };
+
+            var chart = new google.charts.Line(document.getElementById('linechart_material'));
+
+            chart.draw(graph, google.charts.Line.convertOptions(options));
+        }
+        function timeCalc() {
+            updateInput()
+            fetch(`https://simsva.se/api/aidb/sort_data?id=${input[7]}&count=1&every=1`) // where you get the data (use simons api)
+                .then(response => response.json())
+                .then(data => callback(data))
+            function callback(data) {
+                let fromTime = new Date(input[8] + "T" + input[9])
+                let milli = (new Date(data[0].time.substring(0, 19) + "+0000") - fromTime) / parseInt(input[10])
+                console.log(new Date(data[0].time.substring(0, 19)), fromTime)
+                console.log(document.getElementsByName("every")[0].value, Math.floor(milli / input[5]))
+                document.getElementById("every").value = Math.floor(milli / input[5])
+            }
+        }
+    </script>
+</head>
+
+<body onload="onload()">
+    <div>
+        <div id="linechart_material"></div>
+        <input id="volume" type="number" value="5">
+        <input id="ligth" type="number" value="10">
+        <input id="co2" type="number" value="20">
+        <input id="temp" type="number" value="1000">
+        <input id="humidity" type="number" value="1000">
+    </div>
+    <input type="number" name="amount" value="100">
+    <label for="amount"> amount of data</label>
+    <br>
+    <input type="number" name="every" id="every" value="20">
+    <label for="every"> select every n:th data point</label>
+    <br>
+    <input type="number" name="id" value="3">
+    <label for="id">Id of data</label>
+    <button onclick="graphing()"> draw</button>
+    <br>
+    <ul id="devicesList"></ul>
+    <br>
+    <input type="date" id="date" value="2001-02-12">
+    <input type="time" id="time" value="12:32:21">
+    <input type="number" name="kValue" value="2400">
+    <label for="kValue">for adjusting the every calculations</label>
+    <button onclick="timeCalc()">calc every</button>
+
+</body>
+<style>
+    button {
+        float: right;
+        margin-right: 10%;
+    }
+
+    input {
+        border-width: 1px;
+    }
+
+    .time::-webkit-datetime-edit-ampm-field {
+        display: none;
+    }
+
+    #linechart_material {
+        width: 900px;
+        height: 500px;
+    }
+
+    #volume {
+        background-color: #4285f4;
+    }
+
+    #ligth {
+        background-color: #d41734;
+    }
+
+    #co2 {
+        background-color: #fccc00;
+    }
+
+    #temp {
+        background-color: #0f9d58;
+    }
+
+    #humidity {
+        background-color: #ab47bc;
+    }
+</style>
+
+</html>
