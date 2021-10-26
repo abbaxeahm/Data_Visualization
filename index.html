@@ -9,7 +9,7 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
         google.charts.load('current', { 'packages': ['line'] });
-        fetch(`https://simsva.se/api/aidb/get_devices`)
+        fetch(`https://api.simsva.se/aidb/get_devices`)
             .then(response => response.json())
             .then(data => dispayDevices(data));
 
@@ -36,7 +36,7 @@
         function graphing() {
             updateInput()
 
-            fetch(`https://simsva.se/api/aidb/sort_data?id=${input[7]}&count=${input[5]}&every=${input[6]}`) //get the data
+            fetch(`https://api.simsva.se/aidb/sort_data?id=${input[7]}&count=${input[5]}&every=${input[6]}`) //get the data
                 .then(response => response.json())
                 .then(data => draw(data));
         }
@@ -75,7 +75,7 @@
         }
         function timeCalc() {
             updateInput()
-            fetch(`https://simsva.se/api/aidb/sort_data?id=${input[7]}&count=1&every=1`) // get the last data point
+            fetch(`https://api.simsva.se/aidb/sort_data?id=${input[7]}&count=1&every=1`) // get the last data point
                 .then(response => response.json())
                 .then(data => callback(data))
             function callback(data) { // the every calculation 
