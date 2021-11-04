@@ -4,7 +4,7 @@
 
 download the repository
 ``` 
-npm init 
+npm i
 ```
 
 ## how to run
