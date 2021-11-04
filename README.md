@@ -2,9 +2,13 @@
 
 ## setup
 
-* download the repository
-* run: npm i
+download the repository
+``` 
+npm init 
+```
 
 ## how to run
 
-* run: npm run serve
+```
+npm run serve
+```
